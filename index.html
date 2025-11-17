@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scientific Museum | Explore the Universe of Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    /* Reset & Base Styles */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005a99;
+      --secondary: #00cc77;
+      --dark: #111;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+    }
+    body { 
+      font-family:'Inter', sans-serif; 
+      background: var(--light); 
+      color: var(--dark); 
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+    /* Loader */
+    #loader { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: var(--light); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      flex-direction: column;
+      z-index: 9999; 
+      transition: opacity 0.5s ease-out;
+    }
+    .dna-loader {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .dna-loader::before, .dna-loader::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: var(--primary);
+      animation: spin 1.5s linear infinite;
+    }
+    .dna-loader::after {
+      border-top-color: var(--secondary);
+      animation: spin 2s linear infinite reverse;
+    }
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+
+    /* 3D DNA Background */
+    #dna-background { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      z-index: -1; 
+    }
+
+    /* Header */
+    .header { 
+      background: rgba(255, 255, 255, 0.95); 
+      padding: 15px 0; 
+      position: sticky; 
+      top: 0; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .header-content { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    .logo { 
+      font-family: 'Orbitron', sans-serif; 
+      font-size: 28px; 
+      font-weight: 700; 
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo i { color: var(--secondary); }
+    .header-right { 
+      display: flex; 
+      align-items: center; 
+      gap: 20px; 
+    }
+    .search-container {
+      position: relative;
+    }
+    .search-bar { 
+      padding: 8px 15px 8px 40px; 
+      border-radius: 30px; 
+      border: 1px solid #ccc; 
+      width: 200px;
+      transition: all 0.3s;
+    }
+    .search-bar:focus {
+      width: 250px;
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
+    }
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+    .cart-icon { 
+      font-size: 22px; 
+      text-decoration: none; 
+      color: var(--primary);
+      position: relative;
+    }
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--secondary);
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-list { 
+      list-style: none; 
+      display: flex; 
+      gap: 25px; 
+    }
+    .nav-list a { 
+      text-decoration: none; 
+      color: var(--dark); 
+      font-weight: 500;
+      position: relative;
+      padding: 5px 0;
+    }
+    .nav-list a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s;
+    }
+    .nav-list a:hover { color: var(--primary); }
+    .nav-list a:hover::after { width: 100%; }
+
+    /* Hero Section */
+    .hero { 
+      position: relative; 
+      text-align: center; 
+      margin-top: 0;
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero-img { 
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+      z-index: 0;
+    }
+    .hero-text { 
+      position: relative;
+      z-index: 1;
+      color: white;
+      max-width: 800px;
+      padding: 0 20px;
+    }
+    .hero-text h1 { 
+      font-size: 3.5rem; 
+      margin-bottom: 20px; 
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-text p { 
+      font-size: 1.2rem; 
+      margin-bottom: 30px;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.5);
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 12px 30px;
+      background: var(--primary);
+      color: white;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 119, 204, 0.4);
+    }
+    .cta-button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 119, 204, 0.6);
+    }
+
+    /* About Section */
+    .about { 
+      display: flex; 
+      flex-wrap: wrap; 
+      align-items: center; 
+      gap: 40px; 
+      padding: 100px 40px; 
+      background: white;
+    }
+    .about-text { 
+      flex: 1; 
+      min-width: 300px; 
+    }
+    .about-text h2 { 
+      font-size: 2.5rem; 
+      margin-bottom: 20px; 
+      color: var(--primary);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .about-image { 
+      flex: 1; 
+      min-width: 300px; 
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .about-image img { 
+      width: 100%; 
+      height: auto;
+      display: block;
+      transition: transform 0.5s;
+    }
+    .about-image:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Exhibits Section */
+    .exhibits { 
+      text-align: center; 
+      padding: 100px 20px; 
+      background: var(--light);
+    }
+    .exhibits h2 { 
+      font-size: 2.5rem; 
+      margin-bottom: 50px; 
+      color: var(--primary);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .exhibit-cards { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 30px; 
+      justify-content: center; 
+    }
+    .card { 
+      flex: 1 1 300px; 
+      max-width: 350px;
+      padding: 30px; 
+      background: white; 
+      border-radius: 15px; 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+    }
+    .card:hover { 
+      transform: translateY(-10px); 
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    .card h3 { 
+      font-size: 1.5rem; 
+      margin-bottom: 15px; 
+      color: var(--primary);
+    }
+    .card p { 
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+
+    /* Visit Section */
+    .visit { 
+      text-align: center; 
+      padding: 100px 20px; 
+      background: white;
+    }
+    .visit h2 { 
+      font-size: 2.5rem; 
+      margin-bottom: 30px; 
+      color: var(--primary);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .visit p { 
+      font-size: 1.2rem; 
+      margin-bottom: 30px;
+      color: var(--gray);
+    }
+    .map-container {
+      margin-top: 40px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      height: 300px;
+      background: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Footer */
+    .footer { 
+      background: var(--dark); 
+      color: white; 
+      padding: 50px 0 30px; 
+    }
+    .footer-content { 
+      display: flex; 
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      color: #ddd;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover {
+      color: white;
+    }
+    .payment-methods {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .visa-icon { 
+      width: 60px; 
+      height: auto; 
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-content { flex-direction: column; gap: 15px; }
+      .nav-list { gap: 15px; }
+      .hero-text h1 { font-size: 2.5rem; }
+      .hero-text p { font-size: 1rem; }
+      .about, .exhibits, .visit { padding: 60px 20px; }
+      .footer-content { flex-direction: column; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .header-right { flex-wrap: wrap; justify-content: center; }
+      .search-bar { width: 150px; }
+      .search-bar:focus { width: 180px; }
+      .hero-text h1 { font-size: 2rem; }
+      .about-text h2, .exhibits h2, .visit h2 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="dna-loader"></div>
+    <p>Loading Scientific Wonders...</p>
+  </div>
+
+  <!-- 3D DNA background -->
+  <div id="dna-background"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-content">
+      <div class="logo">
+        <i class="fas fa-atom"></i>
+        <span>Scientific Museum</span>
+      </div>
+      <div class="header-right">
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" placeholder="Search exhibits..." class="search-bar">
+        </div>
+        <a href="#" class="cart-icon">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count">0</span>
+        </a>
+        <nav class="nav">
+          <ul class="nav-list">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#exhibits">Exhibits</a></li>
+            <li><a href="#visit">Visit</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main>
+    <section class="hero" id="home">
+      <img src="homeimagetop.jpg" alt="Scientific laboratory" class="hero-img">
+      <div class="hero-text">
+        <h1>Explore the Universe of Science</h1>
+        <p>Discover, interact, and learn about the wonders of life, space, and atoms through our immersive exhibitions.</p>
+        <a href="#exhibits" class="cta-button">Explore Exhibits</a>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="about-text">
+        <h2>About Us</h2>
+        <p>The Scientific Museum inspires curiosity through immersive exhibitions, interactive labs, and live demos across physics, biology, and astronomy. Our mission is to make science accessible and exciting for all ages.</p>
+        <p>With over 50 interactive exhibits and state-of-the-art facilities, we provide a unique learning experience that combines education with entertainment.</p>
+      </div>
+      <div class="about-image">
+        <!-- Placeholder for local image -->
+        <img src="kid-touches-robot.jpg" alt="Kids studying science">
+      </div>
+    </section>
+
+    <section class="exhibits" id="exhibits">
+      <h2>Featured Exhibits</h2>
+      <div class="exhibit-cards">
+        <div class="card">
+          <div class="card-icon">
+            <i class="fas fa-robot"></i>
+          </div>
+          <h3>Robotics Lab</h3>
+          <p>Interact with AI robots and learn automation concepts through hands-on activities and programming challenges.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <h3>Astronomy</h3>
+          <p>Explore planets, stars, and galaxies through realistic simulations and our state-of-the-art planetarium.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <i class="fas fa-dna"></i>
+          </div>
+          <h3>Genetics</h3>
+          <p>Discover the building blocks of life with interactive DNA models and genetic engineering demonstrations.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="visit" id="visit">
+      <h2>Plan Your Visit</h2>
+      <p>Open Mon-Sat: 9AM – 6PM | Plot 12, Innovation Avenue, Kampala</p>
+      <p>Book your tickets online to skip the queue and get 10% off!</p>
+      <div class="map-container">
+        <!-- Placeholder for map -->
+        <p>Interactive Map Coming Soon</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>&copy; 2025 Scientific Museum. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Contact Us</a>
+      </div>
+      <div class="payment-methods">
+        <span>We accept:</span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" class="visa-icon">
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Loader
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loader').style.display = 'none';
+        }, 500);
+      }, 1500);
+    });
+
+    // Enhanced 3D DNA Helix Background
+    let scene, camera, renderer, dnaGroup;
+    let mouseX = 0, mouseY = 0;
+    
+    function initDNA() {
+      // Scene setup
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0); // Transparent background
+      document.getElementById('dna-background').appendChild(renderer.domElement);
+      
+      // Create DNA group
+      dnaGroup = new THREE.Group();
+      scene.add(dnaGroup);
+      
+      // Create DNA double helix
+      const helixRadius = 1.5;
+      const helixHeight = 15;
+      const segments = 100;
+      
+      // Create materials
+      const strand1Material = new THREE.MeshBasicMaterial({ color: 0x0077cc, transparent: true, opacity: 0.8 });
+      const strand2Material = new THREE.MeshBasicMaterial({ color: 0x00cc77, transparent: true, opacity: 0.8 });
+      const baseMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+      
+      // Create first helix (right strand)
+      for (let i = 0; i < segments; i++) {
+        const t = i * 0.3;
+        const y = (i - segments/2) * helixHeight / segments;
+        
+        // Create sphere for the strand point
+        const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const sphere1 = new THREE.Mesh(sphereGeometry, strand1Material);
+        sphere1.position.set(
+          Math.sin(t) * helixRadius,
+          y,
+          Math.cos(t) * helixRadius
+        );
+        dnaGroup.add(sphere1);
+        
+        // Create second helix (left strand)
+        const sphere2 = new THREE.Mesh(sphereGeometry, strand2Material);
+        sphere2.position.set(
+          Math.sin(t + Math.PI) * helixRadius,
+          y,
+          Math.cos(t + Math.PI) * helixRadius
+        );
+        dnaGroup.add(sphere2);
+        
+        // Create base pairs every few segments
+        if (i % 5 === 0) {
+          const baseGeometry = new THREE.CylinderGeometry(0.03, 0.03, helixRadius * 2, 8);
+          const base = new THREE.Mesh(baseGeometry, baseMaterial);
+          base.rotation.z = Math.PI / 2;
+          base.position.set(0, y, 0);
+          dnaGroup.add(base);
+        }
+      }
+      
+      // Add ambient light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+      
+      // Add directional light
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 10, 7);
+      scene.add(directionalLight);
+      
+      // Position camera
+      camera.position.z = 20;
+      
+      // Mouse move interaction
+      document.addEventListener('mousemove', onMouseMove);
+      
+      // Start animation
+      animateDNA();
+    }
+    
+    function onMouseMove(event) {
+      // Calculate mouse position in normalized device coordinates
+      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+    
+    function animateDNA() {
+      requestAnimationFrame(animateDNA);
+      
+      // Rotate DNA
+      dnaGroup.rotation.y += 0.005;
+      
+      // Add subtle movement based on mouse position
+      dnaGroup.rotation.x += mouseY * 0.0005;
+      dnaGroup.rotation.z += mouseX * 0.0005;
+      
+      // Add pulsing effect
+      const scale = 1 + Math.sin(Date.now() * 0.001) * 0.05;
+      dnaGroup.scale.set(scale, scale, scale);
+      
+      renderer.render(scene, camera);
+    }
+    
+    // Handle window resize
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    window.addEventListener('resize', onWindowResize);
+    
+    // Initialize DNA background
+    initDNA();
+
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Add to cart functionality
+    document.querySelector('.cart-icon').addEventListener('click', function(e) {
+      e.preventDefault();
+      const count = document.querySelector('.cart-count');
+      let currentCount = parseInt(count.textContent);
+      count.textContent = currentCount + 1;
+      
+      // Add animation
+      count.style.animation = 'none';
+      setTimeout(() => {
+        count.style.animation = 'pulse 0.5s';
+      }, 10);
+    });
+
+    // Add pulse animation for cart
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
